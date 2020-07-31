@@ -15,6 +15,7 @@ package runtime
 
 import (
 	"context"
+	"github.com/aws/aws-controllers-k8s/pkg/throttle"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -36,10 +37,11 @@ import (
 // controller-runtime.Controller objects (each containing a single reconciler
 // object)s and sharing watch and informer queues across those controllers.
 type reconciler struct {
-	kc  client.Client
-	rmf acktypes.AWSResourceManagerFactory
-	rd  acktypes.AWSResourceDescriptor
-	log logr.Logger
+	kc             client.Client
+	rmf            acktypes.AWSResourceManagerFactory
+	rd             acktypes.AWSResourceDescriptor
+	log            logr.Logger
+	awsThrottleCfg *throttle.ServiceOperationsThrottleConfig
 }
 
 // GroupKind returns the string containing the API group and kind reconciled by
@@ -85,8 +87,8 @@ func (r *reconciler) reconcile(req ctrlrt.Request) error {
 		"account_id", acctID,
 		"kind", r.rd.GroupKind().String(),
 	)
-
-	rm, err := r.rmf.ManagerFor(acctID)
+	sess := NewSession(r.awsThrottleCfg)
+	rm, err := r.rmf.ManagerFor(acctID, sess)
 
 	if res.IsBeingDeleted() {
 		return r.cleanup(ctx, rm, res)
@@ -314,10 +316,12 @@ func (r *reconciler) getOwnerAccountID(
 func NewReconciler(
 	rmf acktypes.AWSResourceManagerFactory,
 	log logr.Logger,
+	awsThrottleCfg *throttle.ServiceOperationsThrottleConfig,
 ) acktypes.AWSResourceReconciler {
 	return &reconciler{
-		rmf: rmf,
-		rd:  rmf.ResourceDescriptor(),
-		log: log,
+		rmf:            rmf,
+		rd:             rmf.ResourceDescriptor(),
+		log:            log,
+		awsThrottleCfg: awsThrottleCfg,
 	}
 }

@@ -15,6 +15,7 @@ package pet
 
 import (
 	"context"
+	"github.com/aws/aws-controllers-k8s/pkg/throttle"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -203,10 +204,8 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	}, nil
 }
 
-func newResourceManager(
-	id ackv1alpha1.AWSAccountID,
-) (*resourceManager, error) {
-	sess, err := ackrt.NewSession()
+func newResourceManager(id ackv1alpha1.AWSAccountID, awsThrottleCfg *throttle.ServiceOperationsThrottleConfig) (*resourceManager, error) {
+	sess, err := ackrt.NewSession(awsThrottleCfg)
 	if err != nil {
 		return nil, err
 	}

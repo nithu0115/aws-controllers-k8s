@@ -1,0 +1,8 @@
+value:
+  apigatewayv2.ServiceID:
+    - operation_ptn: "^Describe|List"
+      rate: 40
+      burst: 5
+    - operation_ptn: "^Create|Update|Delete"
+      rate: 8
+      burst: 5

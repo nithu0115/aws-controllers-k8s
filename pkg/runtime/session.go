@@ -13,16 +13,31 @@
 
 package runtime
 
-import "github.com/aws/aws-sdk-go/aws/session"
+import (
+	"github.com/aws/aws-controllers-k8s/pkg/throttle"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/pkg/errors"
+)
 
-func NewSession() (*session.Session, error) {
-	// NOTE(jaypipes): session.NewSession() is needed for the STS::AssumeRole
-	// stuff we will need to do...
-	sess, err := session.NewSession()
-	if err != nil {
-		return nil, err
+func NewSession(awsThrottleCfg *throttle.ServiceOperationsThrottleConfig) (*session.Session, error) {
+	sess := session.Must(session.NewSession(aws.NewConfig()))
+
+	if  &awsThrottleCfg != nil {
+		throttler := throttle.NewThrottler(awsThrottleCfg)
+		throttler.InjectHandlers(&sess.Handlers)
 	}
-	// TODO(jaypipes): Handling all common region endpoint, throttling
-	// configuration, TLS, etc
+
+	metadata := ec2metadata.New(sess)
+	region, err := metadata.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to introspect region from EC2Metadata, specify --aws-region instead if EC2Metadata is unavailable")
+	}
+
+	awsCfg := aws.NewConfig().WithRegion(region).WithSTSRegionalEndpoint(endpoints.RegionalSTSEndpoint)
+	sess = sess.Copy(awsCfg)
+
 	return sess, nil
 }

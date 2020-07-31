@@ -3,4 +3,6 @@
 *~
 .idea
 /docs/site
-bin
+/bin
+/build
+/scripts/k8s-local-cluster-test/build/

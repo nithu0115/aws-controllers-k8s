@@ -14,6 +14,7 @@
 package runtime
 
 import (
+	"github.com/aws/aws-controllers-k8s/pkg/throttle"
 	"sync"
 
 	"github.com/go-logr/logr"
@@ -81,11 +82,12 @@ func (c *ServiceController) WithResourceManagerFactories(
 // BindControllerManager takes a `controller-runtime.Manager`, creates all the
 // AWSResourceReconcilers needed for the service and binds all of the
 // reconcilers within the service controller with that manager
-func (c *ServiceController) BindControllerManager(mgr ctrlrt.Manager) error {
+func (c *ServiceController) BindControllerManager(mgr ctrlrt.Manager,
+	awsThrottlecfg *throttle.ServiceOperationsThrottleConfig) error {
 	c.metaLock.Lock()
 	defer c.metaLock.Unlock()
 	for _, rmf := range c.rmFactories {
-		rec := NewReconciler(rmf, c.log)
+		rec := NewReconciler(rmf, c.log, awsThrottlecfg)
 		if err := rec.BindControllerManager(mgr); err != nil {
 			return err
 		}

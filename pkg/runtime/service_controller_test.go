@@ -14,6 +14,7 @@
 package runtime_test
 
 import (
+	"github.com/aws/aws-controllers-k8s/pkg/throttle"
 	"net/http"
 	"testing"
 
@@ -96,7 +97,8 @@ func TestServiceController(t *testing.T) {
 	require.Empty(recons)
 
 	mgr := &fakeManager{}
-	err := sc.BindControllerManager(mgr)
+	awsThrottleCfg := &throttle.ServiceOperationsThrottleConfig{}
+	err := sc.BindControllerManager(mgr, awsThrottleCfg)
 	require.Nil(err)
 
 	recons = sc.GetReconcilers()

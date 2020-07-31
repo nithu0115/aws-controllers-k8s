@@ -25,7 +25,7 @@ const (
 	// CR, that means the user expects the ACK service controller to create the
 	// backend AWS service API resource.
 	AnnotationARN = AnnotationPrefix + "arn"
-	// AnnotationOwnerAccountID is an annotation whoe value is the identifier
+	// AnnotationOwnerAccountID is an annotation whose value is the identifier
 	// for the AWS account to which the resource belongs.  If this annotation
 	// is set on a CR, the Kubernetes user is indicating that the ACK service
 	// controller should create/patch/delete the resource in the specified AWS

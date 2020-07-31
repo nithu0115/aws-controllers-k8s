@@ -14,6 +14,7 @@
 package book_test
 
 import (
+	"github.com/aws/aws-controllers-k8s/pkg/throttle"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -43,14 +44,15 @@ func TestManagerFor(t *testing.T) {
 	require.NotNil(bookRMF)
 
 	acctID := ackv1alpha1.AWSAccountID("aws-account-id")
-	bookRM, err := bookRMF.ManagerFor(acctID)
+	awsThrottleCfg := throttle.NewDefaultServiceOperationsThrottleConfig()
+	bookRM, err := bookRMF.ManagerFor(acctID, awsThrottleCfg)
 	require.Nil(err)
 	require.NotNil(bookRM)
 	require.Implements((*acktypes.AWSResourceManager)(nil), bookRM)
 
 	// The resource manager factory should keep a cache of resource manager
 	// objects, keyed by account ID.
-	otherBookRM, err := bookRMF.ManagerFor(acctID)
+	otherBookRM, err := bookRMF.ManagerFor(acctID, awsThrottleCfg)
 	require.Nil(err)
 	require.Exactly(bookRM, otherBookRM)
 }

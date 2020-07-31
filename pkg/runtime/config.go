@@ -17,35 +17,41 @@ import (
 	flag "github.com/spf13/pflag"
 	ctrlrt "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+)
 
+const (
+	flagBindPort             = "bind-port"
+	flagEnableLeaderElection = "enable-leader-election"
+	flagMetricAddr           = "metrics-addr"
+	flagEnableDevLogging     = "enable-development-logging"
 )
 
 type Config struct {
-	BindPort             int
-	MetricsAddr          string
-	EnableLeaderElection bool
+	BindPort                 int
+	MetricsAddr              string
+	EnableLeaderElection     bool
 	EnableDevelopmentLogging bool
 }
 
 func (c *Config) BindFlags() {
 	flag.IntVar(
-		&c.BindPort, "bind-port",
+		&c.BindPort, flagBindPort,
 		9443,
 		"The port the service controller binds to.",
 	)
 	flag.StringVar(
-		&c.MetricsAddr, "metrics-addr",
+		&c.MetricsAddr, flagMetricAddr,
 		"0.0.0.0:8080",
 		"The address the metric endpoint binds to.",
 	)
 	flag.BoolVar(
-		&c.EnableLeaderElection, "enable-leader-election",
+		&c.EnableLeaderElection, flagEnableLeaderElection,
 		false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.",
 	)
 	flag.BoolVar(
-		&c.EnableDevelopmentLogging, "enable-development-logging",
+		&c.EnableDevelopmentLogging, flagEnableDevLogging,
 		false,
 		"Configures the logger to use a Zap development config (encoder=consoleEncoder,logLevel=Debug,stackTraceLevel=Warn, no sampling), " +
 			"otherwise a Zap production config will be used (encoder=jsonEncoder,logLevel=Info,stackTraceLevel=Error), sampling).",

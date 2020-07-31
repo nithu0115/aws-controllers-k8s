@@ -15,8 +15,8 @@ package types
 
 import (
 	"context"
-
 	ackv1alpha1 "github.com/aws/aws-controllers-k8s/apis/core/v1alpha1"
+	"github.com/aws/aws-sdk-go/aws/session"
 )
 
 // AWSResourceManager is responsible for providing a consistent way to perform
@@ -60,5 +60,5 @@ type AWSResourceManagerFactory interface {
 	ResourceDescriptor() AWSResourceDescriptor
 	// ManagerFor returns an AWSResourceManager that manages AWS resources on
 	// behalf of a particular AWS account
-	ManagerFor(ackv1alpha1.AWSAccountID) (AWSResourceManager, error)
+	ManagerFor(ackv1alpha1.AWSAccountID, session.Session) (AWSResourceManager, error)
 }

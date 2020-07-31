@@ -14,11 +14,11 @@
 package book
 
 import (
+	"github.com/aws/aws-controllers-k8s/pkg/throttle"
 	"sync"
 
 	ackv1alpha1 "github.com/aws/aws-controllers-k8s/apis/core/v1alpha1"
 	acktypes "github.com/aws/aws-controllers-k8s/pkg/types"
-
 	svcresource "github.com/aws/aws-controllers-k8s/services/bookstore/pkg/resource"
 )
 
@@ -39,8 +39,7 @@ func (f *resourceManagerFactory) ResourceDescriptor() acktypes.AWSResourceDescri
 // ManagerFor returns a resource manager object that can manage resources for a
 // supplied AWS account
 func (f *resourceManagerFactory) ManagerFor(
-	id ackv1alpha1.AWSAccountID,
-) (acktypes.AWSResourceManager, error) {
+	id ackv1alpha1.AWSAccountID, awsThrottleCfg *throttle.ServiceOperationsThrottleConfig) (acktypes.AWSResourceManager, error) {
 	f.RLock()
 	rm, found := f.rmCache[id]
 	f.RUnlock()
@@ -52,7 +51,7 @@ func (f *resourceManagerFactory) ManagerFor(
 	f.Lock()
 	defer f.Unlock()
 
-	rm, err := newResourceManager(id)
+	rm, err := newResourceManager(id, awsThrottleCfg)
 	if err != nil {
 		return nil, err
 	}

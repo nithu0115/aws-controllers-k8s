@@ -14,6 +14,7 @@
 package main
 
 import (
+	"github.com/aws/aws-controllers-k8s/pkg/throttle"
 	"os"
 
 	ackrt "github.com/aws/aws-controllers-k8s/pkg/runtime"
@@ -43,6 +44,7 @@ func main() {
 	ackCfg.BindFlags()
 	flag.Parse()
 	ackCfg.SetupLogger()
+	awsThrottleCfg := throttle.NewDefaultServiceOperationsThrottleConfig()
 
 	mgr, err := ctrlrt.NewManager(ctrlrt.GetConfigOrDie(), ctrlrt.Options{
 		Scheme:             scheme,
@@ -72,7 +74,7 @@ func main() {
 	).WithResourceManagerFactories(
 		svcresource.GetManagerFactories(),
 	)
-	if err = sc.BindControllerManager(mgr); err != nil {
+	if err = sc.BindControllerManager(mgr, awsThrottleCfg); err != nil {
 		setupLog.Error(
 			err, "unable bind to controller manager to service controller",
 			"aws.service", awsServiceAlias,
