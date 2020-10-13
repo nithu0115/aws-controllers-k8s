@@ -6,10 +6,7 @@ ARG work_dir=/github.com/aws/aws-controllers-k8s
 WORKDIR $work_dir
 # For building Go Module required
 ENV GOPROXY=https://proxy.golang.org,direct
-ENV GO111MODULE=on
-ENV GOARCH=amd64
-ENV GOOS=linux
-ENV CGO_ENABLED=0
+ENV VERSION_PKG=github.com/aws/aws-controllers-k8s/pkg/version
 # Copy the Go Modules manifests
 COPY go.mod go.mod
 COPY go.sum go.sum
@@ -19,10 +16,14 @@ RUN  go mod download
 # Copy the go source
 COPY . $work_dir/
 # Build
-RUN  go build -a -o $work_dir/bin/controller $work_dir/services/$service_alias/cmd/controller/main.go
+RUN GIT_VERSION=$(git describe --tags --dirty --always) && \
+    GIT_COMMIT=$(git rev-parse HEAD) && \
+    BUILD_DATE=$(date +%Y-%m-%dT%H:%M:%S%z) && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on \
+    go build -ldflags="-X ${VERSION_PKG}.GitVersion=${GIT_VERSION} -X ${VERSION_PKG}.GitCommit=${GIT_COMMIT} -X ${VERSION_PKG}.BuildDate=${BUILD_DATE}" -a -o $work_dir/bin/controller $work_dir/services/$service_alias/cmd/controller/main.go
 
 FROM amazonlinux:2
 ARG work_dir=/github.com/aws/aws-controllers-k8s
 WORKDIR /
-COPY --from=builder $work_dir/bin/controller $work_dir/LICENSE $work_dir/ATTRIBUTION.md /bin/.
+COPY --from=builder $work_dir/bin/controller $work_dir/LICENSE $work_dir/ATTRIBUTION.md /bin/
 ENTRYPOINT ["/bin/controller"]
